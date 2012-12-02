@@ -18,8 +18,8 @@ using namespace std;
 #define CLOCKS_PER_SEC 1000000
 /* Parâmetros do algoritmo */
 #define PI 3.14159265
-#define POPULATION_SIZE 4
-#define MAX_ITERATIONS 150
+#define POPULATION_SIZE 8
+#define MAX_ITERATIONS 500
 #define PARAMS_SIZE 2
 #define UPPER_BOUND 1
 #define LOWER_BOUND 0
@@ -30,7 +30,7 @@ using namespace std;
 
 double inertia_bound[2] = { 0.4, 0.9 };
 double w = 0.0;
-double bounds_matrix[PARAMS_SIZE][2] = { { -5, 5 }, { -4, 8 } };
+double bounds_matrix[PARAMS_SIZE][2] = { { 0, 10 }, { 0, 10 } };
 
 double global_best_solution[PARAMS_SIZE];
 double global_best_fitness;
@@ -202,11 +202,13 @@ void calculate_fitness_at(int index) {
 	 + pow(swarm[index].solution_array[1], 2);
 	 */
 
-	// MIN f(x,y) = x^2-x*y+y^2-3*y
-	swarm[index].fitness = pow(swarm[index].solution_array[0], 2)
-			- swarm[index].solution_array[0] * swarm[index].solution_array[1]
-			+ pow(swarm[index].solution_array[1], 2)
-			- 3 * swarm[index].solution_array[1];
+	/*
+	 // MIN f(x,y) = x^2-x*y+y^2-3*y
+	 swarm[index].fitness = pow(swarm[index].solution_array[0], 2)
+	 - swarm[index].solution_array[0] * swarm[index].solution_array[1]
+	 + pow(swarm[index].solution_array[1], 2)
+	 - 3 * swarm[index].solution_array[1];
+	 */
 
 	/*
 	 // MIN f(x, y) = (x-2)^4 + (x - 2y)^2
@@ -215,6 +217,7 @@ void calculate_fitness_at(int index) {
 	 swarm[index].solution_array[0]
 	 - 2 * swarm[index].solution_array[1], 2);
 	 */
+
 	/*
 	 // MIN f(x,y) = 100*(y-x^2)^2+(1 -x)^2
 	 swarm[index].fitness = 100
@@ -223,11 +226,18 @@ void calculate_fitness_at(int index) {
 	 - pow(swarm[index].solution_array[0], 2), 2)
 	 + pow(1 - swarm[index].solution_array[0], 2);
 	 */
+
 	/*
 	 // MAX f(x) = x * sen(10*PI*x) + 1
 	 swarm[index].fitness = swarm[index].solution_array[0]
 	 * sin(10 * PI * swarm[index].solution_array[0]) + 1;
 	 */
+
+	// MIN f(x,y) = x*sen(4*x) + 1.1*y*sen(2*y)
+	swarm[index].fitness = swarm[index].solution_array[0]
+			* sin(4 * swarm[index].solution_array[0])
+			+ 1.1 * swarm[index].solution_array[1]
+					* sin(2 * swarm[index].solution_array[1]);
 }
 
 void get_local_best_at(int index) {
@@ -242,7 +252,7 @@ void get_local_best_at(int index) {
 
 void get_global_best() {
 	for (int i = 0; i < POPULATION_SIZE; i++) {
-		//-------------------------------------------------- MAX/MIN
+		//-------------------------------------------------- MAX > / MIN <
 		if (swarm[i].fitness < global_best_fitness) {
 			for (int j = 0; j < PARAMS_SIZE; j++) {
 				global_best_solution[j] = swarm[i].solution_array[j];
