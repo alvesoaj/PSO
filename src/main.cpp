@@ -27,6 +27,7 @@ using namespace std;
 #define C1 1.8
 #define C2 1.8
 #define MAX_SPEED 2
+#define CONSTRICTION 0.729844
 
 double inertia_bound[2] = { 0.4, 0.9 };
 double w = 0.0;
@@ -141,6 +142,28 @@ double get_inertia_weight() {
 
 void calculate_speed_at(int index) {
 	for (int i = 0; i < PARAMS_SIZE; i++) {
+		// coeficiente de inércia
+		/*
+		 swarm[index].speed_array[i] = w * swarm[index].speed_array[i]
+		 + get_random_number()
+		 * (swarm[index].best_solution_array[i]
+		 - swarm[index].solution_array[i])
+		 + get_random_number()
+		 * (global_best_solution[i]
+		 - swarm[index].solution_array[i]);
+		 */
+		// coeficiente de constricção
+		/*
+		 swarm[index].speed_array[i] = CONSTRICTION
+		 * (swarm[index].speed_array[i]
+		 + get_random_number()
+		 * (swarm[index].best_solution_array[i]
+		 - swarm[index].solution_array[i])
+		 + get_random_number()
+		 * (global_best_solution[i]
+		 - swarm[index].solution_array[i]));
+		 */
+		// coeficiente de inércia + coef de fator individual e social
 		swarm[index].speed_array[i] = w * swarm[index].speed_array[i]
 				+ C1 * get_random_number()
 						* (swarm[index].best_solution_array[i]
@@ -148,6 +171,7 @@ void calculate_speed_at(int index) {
 				+ C2 * get_random_number()
 						* (global_best_solution[i]
 								- swarm[index].solution_array[i]);
+
 		if (swarm[index].speed_array[i] > MAX_SPEED) {
 			swarm[index].speed_array[i] = MAX_SPEED;
 		}
