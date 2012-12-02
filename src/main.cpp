@@ -15,12 +15,11 @@
 using namespace std;
 
 // BUG Eclipse
-// #define CLOCKS_PER_SEC 1000000
-
+#define CLOCKS_PER_SEC 1000000
 /* Parâmetros do algoritmo */
-#define POPULATION_SIZE 8
-#define MAX_ITERATIONS 500
-/* Parâmetros do problema */
+#define PI 3.14159265
+#define POPULATION_SIZE 4
+#define MAX_ITERATIONS 150
 #define PARAMS_SIZE 2
 #define UPPER_BOUND 1
 #define LOWER_BOUND 0
@@ -31,7 +30,7 @@ using namespace std;
 
 double inertia_bound[2] = { 0.4, 0.9 };
 double w = 0.0;
-double bounds_matrix[PARAMS_SIZE][2] = { { -20, 40 }, { -30, 50 } };
+double bounds_matrix[PARAMS_SIZE][2] = { { -5, 5 }, { -4, 8 } };
 
 double global_best_solution[PARAMS_SIZE];
 double global_best_fitness;
@@ -62,7 +61,7 @@ int main(int argc, char *argv[]) {
 	clock_t time_start = clock();
 	int iteration = 0;
 	init();
-	while (iteration < MAX_ITERATIONS and global_best_fitness > 0.0001) {
+	while (iteration < MAX_ITERATIONS) {
 		w = get_inertia_weight();
 		for (int k = 0; k < POPULATION_SIZE; k++) {
 			calculate_speed_at(k);
@@ -118,17 +117,11 @@ void init() {
 		swarm[i].best_fitness = swarm[i].fitness;
 	}
 	// dentre as soluções aleatórias, pegar a melhor
-	int flag = 0;
-	for (int i = 1; i < POPULATION_SIZE; i++) {
-		if (swarm[i].fitness < swarm[flag].fitness) {
-			swarm[flag].fitness = swarm[i].fitness;
-			flag = i;
-		}
-	}
 	for (int j = 0; j < PARAMS_SIZE; j++) {
-		global_best_solution[j] = swarm[flag].solution_array[PARAMS_SIZE];
+		global_best_solution[j] = swarm[0].solution_array[PARAMS_SIZE];
 	}
-	global_best_fitness = swarm[flag].fitness;
+	global_best_fitness = swarm[0].fitness;
+	get_global_best();
 }
 
 double get_random_number() {
@@ -142,6 +135,14 @@ double get_inertia_weight() {
 
 void calculate_speed_at(int index) {
 	for (int i = 0; i < PARAMS_SIZE; i++) {
+		// sem nada
+		swarm[index].speed_array[i] = swarm[index].speed_array[i]
+				+ get_random_number()
+						* (swarm[index].best_solution_array[i]
+								- swarm[index].solution_array[i])
+				+ get_random_number()
+						* (global_best_solution[i]
+								- swarm[index].solution_array[i]);
 		// coeficiente de inércia
 		/*
 		 swarm[index].speed_array[i] = w * swarm[index].speed_array[i]
@@ -164,13 +165,15 @@ void calculate_speed_at(int index) {
 		 - swarm[index].solution_array[i]));
 		 */
 		// coeficiente de inércia + coef de fator individual e social
-		swarm[index].speed_array[i] = w * swarm[index].speed_array[i]
-				+ C1 * get_random_number()
-						* (swarm[index].best_solution_array[i]
-								- swarm[index].solution_array[i])
-				+ C2 * get_random_number()
-						* (global_best_solution[i]
-								- swarm[index].solution_array[i]);
+		/*
+		 swarm[index].speed_array[i] = w * swarm[index].speed_array[i]
+		 + C1 * get_random_number()
+		 * (swarm[index].best_solution_array[i]
+		 - swarm[index].solution_array[i])
+		 + C2 * get_random_number()
+		 * (global_best_solution[i]
+		 - swarm[index].solution_array[i]);
+		 */
 
 		if (swarm[index].speed_array[i] > MAX_SPEED) {
 			swarm[index].speed_array[i] = MAX_SPEED;
@@ -193,22 +196,38 @@ void calculate_displacement_at(int index) {
 }
 
 void calculate_fitness_at(int index) {
-	// MIN f(x,y) = 100 * (y - x^2)^2 + (x - 1)^2
-	//swarm[index].fitness = 100
-	//		* (swarm[index].solution_array[1]
-	//				- swarm[index].solution_array[0]
-	//						* swarm[index].solution_array[0])
-	//		* (swarm[index].solution_array[1]
-	//				- swarm[index].solution_array[0]
-	//						* swarm[index].solution_array[0])
-	//		+ (swarm[index].solution_array[0] - 1)
-	//				* (swarm[index].solution_array[0] - 1);
-	// MIN f(x,y) = 100*(y-x^2)^2+(1 -x)^2
-	swarm[index].fitness = 100
-			* pow(
-					swarm[index].solution_array[1]
-							- pow(swarm[index].solution_array[0], 2), 2)
-			+ pow(1 - swarm[index].solution_array[0], 2);
+	/*
+	 // MIN f(x, y) = x^2 + y^2
+	 * swarm[index].fitness = pow(swarm[index].solution_array[0], 2)
+	 + pow(swarm[index].solution_array[1], 2);
+	 */
+
+	// MIN f(x,y) = x^2-x*y+y^2-3*y
+	swarm[index].fitness = pow(swarm[index].solution_array[0], 2)
+			- swarm[index].solution_array[0] * swarm[index].solution_array[1]
+			+ pow(swarm[index].solution_array[1], 2)
+			- 3 * swarm[index].solution_array[1];
+
+	/*
+	 // MIN f(x, y) = (x-2)^4 + (x - 2y)^2
+	 swarm[index].fitness = pow(swarm[index].solution_array[0] - 2, 4)
+	 + pow(
+	 swarm[index].solution_array[0]
+	 - 2 * swarm[index].solution_array[1], 2);
+	 */
+	/*
+	 // MIN f(x,y) = 100*(y-x^2)^2+(1 -x)^2
+	 swarm[index].fitness = 100
+	 * pow(
+	 swarm[index].solution_array[1]
+	 - pow(swarm[index].solution_array[0], 2), 2)
+	 + pow(1 - swarm[index].solution_array[0], 2);
+	 */
+	/*
+	 // MAX f(x) = x * sen(10*PI*x) + 1
+	 swarm[index].fitness = swarm[index].solution_array[0]
+	 * sin(10 * PI * swarm[index].solution_array[0]) + 1;
+	 */
 }
 
 void get_local_best_at(int index) {
@@ -223,6 +242,7 @@ void get_local_best_at(int index) {
 
 void get_global_best() {
 	for (int i = 0; i < POPULATION_SIZE; i++) {
+		//-------------------------------------------------- MAX/MIN
 		if (swarm[i].fitness < global_best_fitness) {
 			for (int j = 0; j < PARAMS_SIZE; j++) {
 				global_best_solution[j] = swarm[i].solution_array[j];
