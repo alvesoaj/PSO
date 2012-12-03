@@ -64,6 +64,7 @@ void get_global_best();
 void calculate_metrics();
 
 int main(int argc, char *argv[]) {
+	srand(time(NULL)); // Para um randon mais eficiente
 	clock_t time_start = clock();
 	int iteration = 0;
 	init();
